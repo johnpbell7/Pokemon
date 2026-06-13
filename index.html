@@ -225,9 +225,11 @@ const C={
   shadow:"rgba(0,0,0,.16)",
   hud:"#fbfbf2"
 };
-const D={ out:"#1a1a22", body:"#e2a04a", bodyD:"#bd7a2e", bodyL:"#f3cb7c",
-  cream:"#f6efd6", creamD:"#dac9a0", wing:"#2f8f7e", wingD:"#1d6356", wingL:"#63c2ab",
-  white:"#ffffff", eye:"#2f8f7e", claw:"#f0f0e6" };
+/* Dragonite palette tuned to the trading-card art: warm golden-orange body,
+   pale sea-green wings, soft cream belly, gentle dark eyes */
+const D={ out:"#3a2a16", body:"#eaa53f", bodyD:"#c47d28", bodyL:"#f7cf80",
+  cream:"#f7eed2", creamD:"#dccaa0", wing:"#7cb9a7", wingD:"#4d8474", wingL:"#a8d6c7",
+  white:"#ffffff", eye:"#2a241c", nose:"#9a6322", claw:"#f4efe0" };
 
 /* ---------------- CANVAS ---------------- */
 const SCRW=160, SCRH=144;
@@ -403,11 +405,11 @@ function buildDragonite(frame){ const W=78,H=82, cvb=document.createElement("can
   horn(cx-6,18, cx-15,2-wob, 6,2, D.cream); horn(cx+6,18, cx+15,2-wob, 6,2, D.cream);
   fe(cx-12,8-wob,3,5,D.creamD); fe(cx+12,8-wob,3,5,D.creamD);
   fe(cx,40,12,8,D.cream); fe(cx,43,8,4,D.creamD);
-  b.fillStyle=D.bodyD; b.fillRect(cx-4,40,2,1); b.fillRect(cx+3,40,2,1);
-  b.fillStyle=D.out; b.fillRect(cx-5,46,11,1);
+  b.fillStyle=D.nose; b.fillRect(cx-4,40,2,1); b.fillRect(cx+3,40,2,1);
+  b.fillStyle=D.out; b.fillRect(cx-4,46,9,1); b.fillRect(cx-5,45,1,1); b.fillRect(cx+4,45,1,1); /* gentle smile */
   fe(cx-9,31,3,4,D.eye); fe(cx+9,31,3,4,D.eye);
-  b.fillStyle=D.out; b.fillRect(cx-10,29,2,2); b.fillRect(cx+9,29,2,2);
-  b.fillStyle=D.white; b.fillRect(cx-9,30,1,1); b.fillRect(cx+10,30,1,1);
+  b.fillStyle=D.out; b.fillRect(cx-11,29,2,2); b.fillRect(cx+10,29,2,2);
+  b.fillStyle=D.white; b.fillRect(cx-10,30,2,2); b.fillRect(cx+9,30,2,2); /* bright eye shine */
   fe(cx,50,3,2,D.wing);
   let img=b.getImageData(0,0,W,H), p=img.data; const op=(x,y)=>(x>=0&&y>=0&&x<W&&y<H)&&p[(y*W+x)*4+3]>20;
   for(let pass=0;pass<2;pass++){ const add=[];
@@ -660,9 +662,25 @@ function drawHUD(){ if(state!=="play")return; const tot=studentsTotal();
   drawBox(4,4,60,16); drawText("♥",9,8,C.flowerR,1); drawText(studentsSpoken+"/"+tot,20,8,C.ink,1);
   /* tiny progress bar */
   const fillc=studentsSpoken>=tot?C.grassD:C.skyD; rect(20,15,Math.round(38*studentsSpoken/tot),1,fillc); }
+/* soft drifting cloud */
+function drawCloud(x,y){ x|=0; y|=0; rect(x+3,y+2,11,4,C.white); rect(x,y+4,17,3,C.white); rect(x+5,y,8,3,C.white);
+  rect(x+2,y+3,13,1,"#e2edf8"); rect(x+6,y+1,5,1,"#ffffff"); }
+/* rotating god-rays for the reveal moment (smooth, behind the sprite) */
+function drawRays(cx,cy,rot){ ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot); const n=14;
+  for(let i=0;i<n;i++){ ctx.rotate(Math.PI*2/n); if(i&1)continue;
+    ctx.fillStyle="rgba(255,244,198,0.10)"; ctx.beginPath();
+    ctx.moveTo(0,0); ctx.lineTo(150,-13); ctx.lineTo(150,13); ctx.closePath(); ctx.fill(); }
+  ctx.restore(); }
+/* unifying LCD vignette built once */
+let VIG=null;
+function buildVig(){ VIG=ctx.createRadialGradient(SCRW/2,SCRH*0.46,46,SCRW/2,SCRH/2,120);
+  VIG.addColorStop(0,"rgba(10,14,20,0)"); VIG.addColorStop(0.72,"rgba(10,14,20,0.05)");
+  VIG.addColorStop(1,"rgba(10,14,20,0.22)"); }
+function drawVignette(){ if(VIG){ ctx.fillStyle=VIG; ctx.fillRect(0,0,SCRW,SCRH); } }
 function drawTitle(){ clear(C.sky);
   /* sky gradient bands + sun */
   rect(0,0,SCRW,40,C.skyD); rect(0,40,SCRW,12,"#74b0ea");
+  drawCloud(((tick*0.16)%210)-36,4); drawCloud(((tick*0.10+150)%210)-36,30);
   rect(124,12,3,3,C.flowerY); rect(121,15,9,3,C.flowerY); rect(124,18,3,3,C.flowerY); rect(123,14,7,5,"#fff1a8");
   rect(0,96,SCRW,48,C.grass); rect(0,94,SCRW,2,C.grassD); rect(0,96,SCRW,1,C.grassL);
   for(let i=0;i<6;i++) drawTile(tTREE,i*30+2,78);
@@ -674,6 +692,7 @@ function drawTitle(){ clear(C.sky);
   if(DRAGO.length){ ctx.drawImage(DRAGO[(tick>>4)&1],84,56+((tick>>4)&1)); }
   if(((tick>>5)%2)===0) drawCenterSh("PRESS  START",131,C.white,C.navy,1); }
 function drawIntro(){ clear(C.sky); rect(0,0,SCRW,40,C.skyD);
+  drawCloud(((tick*0.16)%210)-36,12); drawCloud(((tick*0.10+150)%210)-36,40);
   rect(0,72,SCRW,72,C.grass); rect(0,70,SCRW,2,C.grassD); rect(0,72,SCRW,1,C.grassL);
   for(let i=0;i<3;i++) drawTile(tTREE,18+i*54,52);
   const ks=MAPS.town?MAPS.town.npcs:[]; for(let i=0;i<6&&i<ks.length;i++) drawKid(14+i*22,78,"down",((tick>>4)+i)&1,ks[i].look);
@@ -684,7 +703,12 @@ function pokeballBig(x,y){ const r=(a,b,w,h,c)=>rect(x+a,y+b,w,h,c);
 function drawReceive(){ drawWorld(); ctx.fillStyle="rgba(20,20,28,0.55)"; ctx.fillRect(0,0,SCRW,SCRH-46);
   const cxp=SCRW/2;
   if(rec.step===0){ pokeballBig(cxp-11,52+((tick>>4)&1)); if(((tick>>4)%2)===0) drawCenter("Press A...",92,C.white,1); }
-  else { const f=(tick>>3)&1, bob=Math.round(Math.sin(tick/9)*2); if(DRAGO.length) ctx.drawImage(DRAGO[f],cxp-39,12+bob);
+  else { const f=(tick>>3)&1, bob=Math.round(Math.sin(tick/9)*2); const gcy=48+bob;
+    drawRays(cxp,gcy,tick/55);
+    const gg=ctx.createRadialGradient(cxp,gcy,4,cxp,gcy,70);
+    gg.addColorStop(0,"rgba(255,243,198,0.55)"); gg.addColorStop(1,"rgba(255,243,198,0)");
+    ctx.fillStyle=gg; ctx.fillRect(0,0,SCRW,SCRH-46);
+    if(DRAGO.length) ctx.drawImage(DRAGO[f],cxp-39,12+bob);
     for(const s of sparks) rect(s.x,s.y,2,2,s.a>0.5?C.white:C.flowerY); }
   if(rec.step>=2){ drawBox(3,SCRH-44,SCRW-6,42); drawCenter(CONFIG.teacherName+" received",SCRH-36,C.ink,1);
     drawCenter(CONFIG.starter+"!",SCRH-24,C.roof,1);
@@ -736,8 +760,9 @@ function frame(t){ const dt=Math.min(0.05,(t-last)/1000); last=t; tick++;
   else if(state==="trainer")drawTrainer();
   else if(state==="credits"){ if(!creditLines.length)buildCredits(); drawCredits(); }
   else { drawWorld(); drawHUD(); if(state==="receive")drawReceive(); if(dlg&&state!=="receive")drawDialogue(); }
-  drawTrans(); requestAnimationFrame(frame); }
+  drawVignette(); drawTrans(); requestAnimationFrame(frame); }
 /* boot */
+buildVig();
 DRAGO=[buildDragonite(0),buildDragonite(1)];
 initMaps(); M=MAPS.town;
 requestAnimationFrame(frame);
