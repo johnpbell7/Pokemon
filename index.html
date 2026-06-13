@@ -391,6 +391,10 @@ function buildDragonite(frame){ const W=78,H=82, cvb=document.createElement("can
   fe(cx-26,44-wob,9,8,D.wing); tri([cx-12,46],[cx-37,30-wob],[cx-22,40-wob],D.wingD);
   tri([cx+12,46],[cx+37,30-wob],[cx+14,60],D.wing); tri([cx+14,46],[cx+34,46-wob],[cx+16,62],D.wing);
   fe(cx+26,44-wob,9,8,D.wing); tri([cx+12,46],[cx+37,30-wob],[cx+22,40-wob],D.wingL);
+  /* membrane finger-lines on the wings (card detail) */
+  b.strokeStyle=D.wingD; b.lineWidth=1; const wln=(x0,y0,x1,y1)=>{ b.beginPath(); b.moveTo(x0,y0); b.lineTo(x1,y1); b.stroke(); };
+  wln(cx-13,47,cx-33,34-wob); wln(cx-13,50,cx-31,46-wob); wln(cx-14,54,cx-22,58);
+  wln(cx+13,47,cx+33,34-wob); wln(cx+13,50,cx+31,46-wob); wln(cx+14,54,cx+22,58);
   horn(cx+8,72, cx+26,70+twob, 9,3, D.body); fe(cx+25,70+twob,4,3,D.bodyD);
   fe(cx,57,18,21,D.body); fe(cx,61,11,16,D.cream);
   b.fillStyle=D.creamD; for(let i=0;i<4;i++){ b.fillRect(cx-9,54+i*7,18,1); }
@@ -662,6 +666,14 @@ function drawHUD(){ if(state!=="play")return; const tot=studentsTotal();
   drawBox(4,4,60,16); drawText("♥",9,8,C.flowerR,1); drawText(studentsSpoken+"/"+tot,20,8,C.ink,1);
   /* tiny progress bar */
   const fillc=studentsSpoken>=tot?C.grassD:C.skyD; rect(20,15,Math.round(38*studentsSpoken/tot),1,fillc); }
+/* the class's red YEAR 6 diary, held in two hands */
+function drawDiary(x,y){ x|=0; y|=0;
+  rect(x,y,11,8,C.black);            /* outline */
+  rect(x+1,y+1,9,6,"#c0392b");       /* cover */
+  rect(x+1,y+1,9,1,"#e0584a");       /* top sheen */
+  rect(x+9,y+1,1,6,"#7a2018");       /* spine shade */
+  rect(x+3,y+3,5,1,"#ffd35a"); rect(x+3,y+5,3,1,"#ffd35a"); /* gold title lines */
+  rect(x+1,y+7,9,1,"#f3efe0"); }     /* page edge */
 /* soft drifting cloud */
 function drawCloud(x,y){ x|=0; y|=0; rect(x+3,y+2,11,4,C.white); rect(x,y+4,17,3,C.white); rect(x+5,y,8,3,C.white);
   rect(x+2,y+3,13,1,"#e2edf8"); rect(x+6,y+1,5,1,"#ffffff"); }
@@ -689,7 +701,11 @@ function drawTitle(){ clear(C.sky);
   drawCenterSh("POKEMON",18,C.roof,C.roofD,2); rect(26,40,108,1,C.navy);
   drawCenter("Mr Brewin's Class",44,C.navy,1);
   drawTeacher(34,112,"down",((tick>>4)&1)?1:0);
+  drawDiary(37,119);
   if(DRAGO.length){ ctx.drawImage(DRAGO[(tick>>4)&1],84,56+((tick>>4)&1)); }
+  /* floating hearts drifting up around the pair */
+  for(let h=0;h<4;h++){ const hy=(106-((tick/3+h*36)%88))|0; const hx=(26+h*34+Math.sin(tick/18+h)*4)|0;
+    if(hy>56) drawText("♥",hx,hy,(h&1)?C.flowerR:C.roofL,1); }
   if(((tick>>5)%2)===0) drawCenterSh("PRESS  START",131,C.white,C.navy,1); }
 function drawIntro(){ clear(C.sky); rect(0,0,SCRW,40,C.skyD);
   drawCloud(((tick*0.16)%210)-36,12); drawCloud(((tick*0.10+150)%210)-36,40);
