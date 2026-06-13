@@ -558,24 +558,34 @@ function bindBtn(id,onDown,onUp){ const el=document.getElementById(id); if(!el)r
   const u=e=>{ if(e)e.preventDefault(); el.classList.remove("press"); onUp&&onUp(); };
   el.addEventListener("touchstart",d,{passive:false}); el.addEventListener("touchend",u);
   el.addEventListener("touchcancel",u); el.addEventListener("mousedown",d); el.addEventListener("mouseup",u); }
-/* unified D-pad: the whole cross is live — tap/hold anywhere to move, slide to steer */
+/* unified D-pad — whole cross is live: tap/hold anywhere to move, slide to steer.
+   Uses Pointer Events + pointer capture (most reliable on mobile), with a
+   touch/mouse fallback for older browsers. */
 (function(){ const pad=document.getElementById("dpad"); if(!pad)return;
-  const arms={up:"dpu",down:"dpd",left:"dpl",right:"dpr"}; let active=false;
+  const arms={up:"dpu",down:"dpd",left:"dpl",right:"dpr"};
   function hi(dir){ for(const k in arms){ const el=document.getElementById(arms[k]); if(el)el.classList.toggle("press",k===dir); } }
-  function setFromXY(cx,cy){ const r=pad.getBoundingClientRect();
+  function steer(cx,cy){ const r=pad.getBoundingClientRect();
     const x=cx-(r.left+r.width/2), y=cy-(r.top+r.height/2);
     held.up=held.down=held.left=held.right=0; let dir=null;
     if(Math.abs(x)>=4||Math.abs(y)>=4){ dir=Math.abs(x)>Math.abs(y)?(x<0?"left":"right"):(y<0?"up":"down"); held[dir]=1; }
     hi(dir); }
-  const pt=e=>e.touches&&e.touches[0]?e.touches[0]:e;
-  function down(e){ initAudio(); active=true; const t=pt(e); setFromXY(t.clientX,t.clientY); if(e.cancelable)e.preventDefault(); }
-  function move(e){ if(!active)return; const t=pt(e); setFromXY(t.clientX,t.clientY); if(e.cancelable)e.preventDefault(); }
-  function up(e){ active=false; held.up=held.down=held.left=held.right=0; hi(null); }
-  pad.addEventListener("touchstart",down,{passive:false});
-  pad.addEventListener("touchmove",move,{passive:false});
-  pad.addEventListener("touchend",up); pad.addEventListener("touchcancel",up);
-  pad.addEventListener("mousedown",down);
-  addEventListener("mousemove",e=>{ if(active)move(e); }); addEventListener("mouseup",up);
+  function release(){ held.up=held.down=held.left=held.right=0; hi(null); }
+  if(window.PointerEvent){
+    pad.addEventListener("pointerdown",e=>{ initAudio(); try{ pad.setPointerCapture(e.pointerId); }catch(_){}
+      steer(e.clientX,e.clientY); e.preventDefault(); });
+    pad.addEventListener("pointermove",e=>{ if(e.pointerType==="mouse"&&e.buttons===0)return;
+      steer(e.clientX,e.clientY); e.preventDefault(); });
+    pad.addEventListener("pointerup",release); pad.addEventListener("pointercancel",release);
+    pad.addEventListener("lostpointercapture",release);
+  } else {
+    const pt=e=>e.touches&&e.touches[0]?e.touches[0]:e; let active=false;
+    const down=e=>{ initAudio(); active=true; const t=pt(e); steer(t.clientX,t.clientY); if(e.cancelable)e.preventDefault(); };
+    const move=e=>{ if(!active)return; const t=pt(e); steer(t.clientX,t.clientY); if(e.cancelable)e.preventDefault(); };
+    const up=()=>{ active=false; release(); };
+    pad.addEventListener("touchstart",down,{passive:false}); pad.addEventListener("touchmove",move,{passive:false});
+    pad.addEventListener("touchend",up); pad.addEventListener("touchcancel",up);
+    pad.addEventListener("mousedown",down); addEventListener("mousemove",e=>{ if(active)move(e); }); addEventListener("mouseup",up);
+  }
 })();
 bindBtn("btnA",()=>{ initAudio(); pressA(); }); bindBtn("btnB",()=>{ initAudio(); pressB(); });
 bindBtn("start",()=>{ initAudio(); if(state==="title")startIntro(); else pressA(); });
