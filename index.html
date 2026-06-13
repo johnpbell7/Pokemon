@@ -646,7 +646,9 @@ function drawWorld(){ clear(C.grassD);
   for(let y=y0-1;y<=y0+10;y++)for(let x=x0-1;x<=x0+11;x++){ if(x<0||y<0||x>=M.W||y>=M.H)continue;
     drawTile(M.grid[y][x], x*16-cam.x, y*16-cam.y); }
   const ents=[];
-  for(const n of M.npcs) ents.push({y:n.y*16,f:()=>drawKid(n.x*16-cam.x,n.y*16-cam.y,n.d,n.step,n.look)});
+  for(const n of M.npcs) ents.push({y:n.y*16,f:()=>{ const sx=n.x*16-cam.x, sy=n.y*16-cam.y;
+    drawKid(sx,sy,n.d,n.step,n.look);
+    if(n.spoken){ const hb=((tick>>3)+n.x)&1; drawText("♥",sx+5,sy-7-hb,C.flowerR,1); } }});
   ents.push({y:player.py,f:()=>drawTeacher(player.px-cam.x,player.py-cam.y,player.dir,player.moving?player.step:0)});
   ents.sort((a,b)=>a.y-b.y); ents.forEach(e=>e.f()); }
 function rrect(x,y,w,h,c){ rect(x+1,y,w-2,h,c); rect(x,y+1,w,h-2,c); }
@@ -689,6 +691,29 @@ function buildVig(){ VIG=ctx.createRadialGradient(SCRW/2,SCRH*0.46,46,SCRW/2,SCR
   VIG.addColorStop(0,"rgba(10,14,20,0)"); VIG.addColorStop(0.72,"rgba(10,14,20,0.05)");
   VIG.addColorStop(1,"rgba(10,14,20,0.22)"); }
 function drawVignette(){ if(VIG){ ctx.fillStyle=VIG; ctx.fillRect(0,0,SCRW,SCRH); } }
+/* atmospheric cherry-blossom petals drifting on the wind (screen-space) */
+const petals=[]; const petalCols=["#f7c2d8","#fbe0ec","#fbfbf2","#f3a9c6"];
+function initPetals(){ petals.length=0; for(let i=0;i<13;i++) petals.push({
+  x:Math.random()*SCRW, y:Math.random()*SCRH, ph:Math.random()*6.3,
+  c:petalCols[i%petalCols.length], sz:(Math.random()<0.4?1:2) }); }
+function updatePetals(dt){ for(const p of petals){ p.ph+=dt*2.2;
+  p.x+=(11+Math.sin(p.ph)*9)*dt; p.y+=(16+Math.cos(p.ph*0.7)*3)*dt;
+  if(p.x>SCRW+3)p.x=-3; if(p.y>SCRH+3){ p.y=-3; p.x=Math.random()*SCRW; } } }
+function drawPetals(){ for(const p of petals){ rect(p.x,p.y,p.sz,p.sz,p.c);
+  if(p.sz===2) rect(p.x,p.y+1,1,1,shade(p.c,-22)); } }
+/* nearest kid not yet spoken to, + a chevron that guides the player to them */
+function nearestUnspoken(){ let best=null,bd=1e9; for(const n of M.npcs){ if(n.spoken)continue;
+  const dx=n.x*16-player.px, dy=n.y*16-player.py, d=dx*dx+dy*dy; if(d<bd){ bd=d; best=n; } } return best; }
+function drawChevron(x,y,ang,col){ ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.fillStyle=col;
+  ctx.beginPath(); ctx.moveTo(5,0); ctx.lineTo(-4,-4); ctx.lineTo(-4,4); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.stroke(); ctx.restore(); }
+function drawTracker(){ const n=nearestUnspoken(); if(!n)return;
+  const sx=n.x*16-cam.x+8, sy=n.y*16-cam.y, bob=Math.sin(tick/7)*1.5;
+  if(sx>=6&&sx<=SCRW-6&&sy>=16&&sy<=SCRH-50){ drawChevron(sx,sy-6+bob,Math.PI/2,C.flowerY); }
+  else { const cxs=SCRW/2, cys=SCRH/2-8, ang=Math.atan2(sy-cys,sx-cxs);
+    const ex=Math.max(12,Math.min(SCRW-12,cxs+Math.cos(ang)*78));
+    const ey=Math.max(26,Math.min(SCRH-54,cys+Math.sin(ang)*58));
+    drawChevron(ex,ey,ang,C.flowerY); } }
 function drawTitle(){ clear(C.sky);
   /* sky gradient bands + sun */
   rect(0,0,SCRW,40,C.skyD); rect(0,40,SCRW,12,"#74b0ea");
@@ -735,6 +760,7 @@ function drawFinale(){ clear(C.grass); rect(0,0,SCRW,8,C.grassD); rect(0,SCRH-46
     drawKid(6+col*19, 12+row*20, "down", ((tick>>4)+i)&1, st.look); i++; }
   drawTeacher(60,SCRH-60,"up",0); dragoMini(82,SCRH-60,(tick>>4)&1);
   for(let h=0;h<5;h++){ const hy=SCRH-58-((tick/2+h*22)%42); drawText("♥",22+h*26,hy,C.roof,1); }
+  drawPetals();
   if(dlg)drawDialogue(); }
 function drawTrainer(){ clear(C.navy);
   for(let i=0;i<SCRH;i+=4) rect(0,i,SCRW,1,"#23336b"); /* subtle scan stripes */
@@ -761,6 +787,7 @@ let last=performance.now();
 function frame(t){ const dt=Math.min(0.05,(t-last)/1000); last=t; tick++;
   if(MAPS.town) MAPS.town.npcs.forEach(n=>{ n.step=(((tick>>5)+n.x)%9===0)?1:0; });
   if(state==="play"){ tryMove(dt); updateMove(dt); }
+  if(state==="play"||state==="finale") updatePetals(dt);
   updateTrans(dt);
   if(dlg){ const tot=pageLen(); if(dlg.shown<tot){ dlg.shown+=dt*38; if(dlg.shown>=tot)dlg.shown=tot;
     else if((Math.floor(dlg.shown)&3)===0)sfx("text"); } }
@@ -775,10 +802,11 @@ function frame(t){ const dt=Math.min(0.05,(t-last)/1000); last=t; tick++;
   else if(state==="finale")drawFinale();
   else if(state==="trainer")drawTrainer();
   else if(state==="credits"){ if(!creditLines.length)buildCredits(); drawCredits(); }
-  else { drawWorld(); drawHUD(); if(state==="receive")drawReceive(); if(dlg&&state!=="receive")drawDialogue(); }
+  else { drawWorld(); if(state==="play")drawPetals(); drawHUD(); if(state==="play"&&!dlg)drawTracker();
+    if(state==="receive")drawReceive(); if(dlg&&state!=="receive")drawDialogue(); }
   drawVignette(); drawTrans(); requestAnimationFrame(frame); }
 /* boot */
-buildVig();
+buildVig(); initPetals();
 DRAGO=[buildDragonite(0),buildDragonite(1)];
 initMaps(); M=MAPS.town;
 requestAnimationFrame(frame);
