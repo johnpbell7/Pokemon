@@ -835,15 +835,18 @@ function drawFinale(){ clear(C.grass); rect(0,0,SCRW,8,C.grassD); rect(0,SCRH-46
   if(dlg)drawDialogue(); }
 function drawTrainer(){ clear(C.navy);
   for(let i=0;i<SCRH;i+=4) rect(0,i,SCRW,1,"#23336b"); /* subtle scan stripes */
-  drawBox(8,12,SCRW-16,SCRH-44);
+  drawBox(8,12,SCRW-16,96);
   rect(12,16,SCRW-24,11,C.roof); rect(12,16,SCRW-24,1,C.roofL); drawTextSh("TRAINER CARD",16,18,C.white,C.roofD,1);
   drawBox(14,32,38,46); rect(16,34,34,42,C.sky); rect(16,34,34,1,"#bfe0ff"); drawTeacher(24,72,"down",0);
   drawText("NAME",58,34,C.navy,1); drawText(CONFIG.teacherName,58,44,C.ink,1);
-  drawText("CLASS",58,58,C.navy,1); drawText(CONFIG.className,58,68,C.ink,1);
-  drawText("GOODBYES "+studentsSpoken,14,84,C.ink,1);
-  for(let i=0;i<8;i++){ const got=i<Math.min(8,Math.ceil(studentsSpoken/4)); drawText("♥",14+i*14,96,got?C.roof:"#c9c4b4",1); }
-  drawBox(3,SCRH-30,SCRW-6,28); drawCenter("A champion teacher, through and through.",SCRH-24,C.ink,1);
-  if((tick>>4)&1) drawCenter("Press A",SCRH-12,C.navy,1); }
+  drawText("CLASS",58,58,C.navy,1);
+  { const cl=wrap(CONFIG.className,15); for(let i=0;i<cl.length&&i<2;i++) drawText(cl[i],58,68+i*10,C.ink,1); }
+  drawText("GOODBYES "+studentsSpoken,14,88,C.ink,1);
+  for(let i=0;i<8;i++){ const got=i<Math.min(8,Math.ceil(studentsSpoken/4)); drawText("♥",14+i*14,98,got?C.roof:"#c9c4b4",1); }
+  drawBox(3,SCRH-34,SCRW-6,32);
+  { const tg=wrap("A champion teacher, through and through.",24);
+    for(let i=0;i<tg.length;i++) drawCenter(tg[i],SCRH-31+i*9,C.ink,1); }
+  if((tick>>4)&1) drawCenter("Press A",SCRH-11,C.navy,1); }
 function drawCredits(){ clear(C.navy);
   for(let i=0;i<SCRH;i+=4) rect(0,i,SCRW,1,"#23336b");
   if(creditsDone){ drawCenter("Thank you,",46,C.white,1); drawCenterSh(CONFIG.teacherName+"!",60,C.flowerY,C.roofD,2);
