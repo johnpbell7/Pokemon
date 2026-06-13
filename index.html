@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Pokemon - Mr Brewin's Class</title>
+<!-- install / fullscreen as a web app (hides the browser URL bar) -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#06070a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brewin's Class">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;margin:0;padding:0;}
   html,body{height:100%;width:100%;overflow:hidden;background:#06070a;
@@ -590,6 +599,13 @@ function bindBtn(id,onDown,onUp){ const el=document.getElementById(id); if(!el)r
 bindBtn("btnA",()=>{ initAudio(); pressA(); }); bindBtn("btnB",()=>{ initAudio(); pressB(); });
 bindBtn("start",()=>{ initAudio(); if(state==="title")startIntro(); else pressA(); });
 bindBtn("select",()=>{ muted=!muted; });
+/* hide the browser URL bar by going fullscreen on the first tap (Android/desktop;
+   iOS users get fullscreen via Add-to-Home-Screen, see manifest) */
+function goFullscreen(){ const el=document.documentElement;
+  const rf=el.requestFullscreen||el.webkitRequestFullscreen||el.webkitRequestFullScreen||el.msRequestFullscreen;
+  if(rf){ try{ const p=rf.call(el); if(p&&p.catch)p.catch(()=>{}); }catch(_){} } }
+let _fsDone=false; function tryFS(){ if(_fsDone)return; _fsDone=true; goFullscreen(); }
+addEventListener("pointerdown",tryFS); addEventListener("touchend",tryFS); addEventListener("mousedown",tryFS);
 function clearHeld(){ held.up=held.down=held.left=held.right=0; }
 addEventListener("mouseup",clearHeld); addEventListener("touchend",clearHeld);
 addEventListener("touchcancel",clearHeld); addEventListener("blur",clearHeld);

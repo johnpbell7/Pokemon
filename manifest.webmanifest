@@ -1,0 +1,17 @@
+{
+  "name": "Pokemon - Mr Brewin's Class",
+  "short_name": "Brewin's Class",
+  "description": "A Pokemon-style farewell game for Mr Brewin's class.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
+  "background_color": "#06070a",
+  "theme_color": "#06070a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
