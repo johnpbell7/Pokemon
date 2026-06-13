@@ -733,7 +733,7 @@ function drawBox(x,y,w,h){ rrect(x,y,w,h,C.white);
   rect(x+3,y+h-3,w-6,1,C.navy); rect(x+w-3,y+3,1,h-6,C.navy); }
 function drawDialogue(){ drawBox(3,SCRH-44,SCRW-6,42);
   if(dlg.speaker){ const w=textW(dlg.speaker,1)+14; let bx=6; if(bx+w>SCRW-3)bx=SCRW-3-w; if(bx<3)bx=3;
-    drawBox(bx,SCRH-53,w,13); drawText(dlg.speaker,bx+6,SCRH-49,C.navy,1); }
+    drawBox(bx,SCRH-55,w,15); drawText(dlg.speaker,bx+7,SCRH-51,C.navy,1); }
   const pg=dlg.pages[dlg.pg]; let shown=Math.floor(dlg.shown),used=0;
   for(let i=0;i<pg.length;i++){ const ln=pg[i]; drawText(ln.slice(0,Math.max(0,shown-used)),11,SCRH-37+i*12,C.ink,1); used+=ln.length+1; }
   if(shown>=pageLen()&&((tick>>4)&1)){ rect(SCRW-14,SCRH-10,5,2,C.navy); rect(SCRW-13,SCRH-8,3,2,C.navy); rect(SCRW-12,SCRH-6,1,2,C.navy); } }
